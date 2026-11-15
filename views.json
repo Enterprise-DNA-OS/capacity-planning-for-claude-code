@@ -5,7 +5,7 @@
     "sections": [
       {
         "title": "Headroom after reserve",
-        "sql": "SELECT * FROM capacity_review ORDER BY code",
+        "sql": "SELECT code,allocated_cpu,cpu_headroom,allocated_memory_gib,memory_headroom_gib,inventory_state FROM capacity_review ORDER BY code",
         "note": "Allocatable CPU units, not physical core counts. Negative headroom is above policy allocation."
       },
       {

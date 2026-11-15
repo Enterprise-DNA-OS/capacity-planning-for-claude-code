@@ -8,7 +8,22 @@
       {
         "title": "Capacity and reserve",
         "sql": "SELECT * FROM capacity_review WHERE id=$1",
-        "layout": "record"
+        "layout": "record",
+        "columns": [
+          "code",
+          "name",
+          "owner",
+          "cpu_capacity",
+          "memory_gib",
+          "reserve_pct",
+          "reviewed_on",
+          "workloads",
+          "allocated_cpu",
+          "cpu_headroom",
+          "allocated_memory_gib",
+          "memory_headroom_gib",
+          "inventory_state"
+        ]
       },
       {
         "title": "Workload evidence",
@@ -25,12 +40,41 @@
       {
         "title": "Proposal, decision and outcome",
         "sql": "SELECT * FROM change_review WHERE id=$1",
-        "layout": "record"
+        "layout": "record",
+        "columns": [
+          "code",
+          "workload_code",
+          "name",
+          "owner",
+          "old_cpu",
+          "proposed_cpu",
+          "old_memory_gib",
+          "proposed_memory_gib",
+          "due_on",
+          "reason",
+          "rollback_plan",
+          "actor",
+          "status",
+          "reviewer",
+          "approval_evidence",
+          "impact_review",
+          "outcome",
+          "outcome_evidence",
+          "overdue"
+        ]
       },
       {
         "title": "Original measurement",
         "sql": "SELECT o.* FROM observations o JOIN changes c ON c.observation_id=o.id WHERE c.id=$1",
-        "layout": "record"
+        "layout": "record",
+        "columns": [
+          "observed_on",
+          "window_days",
+          "cpu_p95",
+          "memory_p95_gib",
+          "evidence",
+          "actor"
+        ]
       }
     ]
   }
