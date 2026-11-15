@@ -1,13 +1,41 @@
 [
   {
-    "name": "week",
-    "title": "This week",
-    "subtitle": "Capacity Planning for Claude Code: what needs attention, rendered by npm run view",
+    "name": "capacity-week",
+    "title": "Weekly capacity review",
     "sections": [
       {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "title": "Headroom after reserve",
+        "sql": "SELECT * FROM capacity_review ORDER BY code",
+        "note": "Allocatable CPU units, not physical core counts. Negative headroom is above policy allocation."
+      },
+      {
+        "title": "Sizing evidence",
+        "sql": "SELECT code,cpu,suggested_cpu,memory_gib,suggested_memory_gib,data_state FROM workload_review ORDER BY code",
+        "note": "A sizing suggestion is a review candidate, never a performance guarantee."
+      }
+    ]
+  },
+  {
+    "name": "changes",
+    "title": "Change review",
+    "sections": [
+      {
+        "title": "Decisions and outcomes",
+        "sql": "SELECT code,workload_code,due_on,status,overdue FROM change_review ORDER BY due_on"
+      },
+      {
+        "title": "Evidence gaps",
+        "sql": "SELECT * FROM compliance_review ORDER BY rule,record"
+      }
+    ]
+  },
+  {
+    "name": "followups",
+    "title": "Capacity follow-ups",
+    "sections": [
+      {
+        "title": "Open actions",
+        "sql": "SELECT code,name,owner,due_on FROM followups WHERE resolution IS NULL ORDER BY due_on"
       }
     ]
   }

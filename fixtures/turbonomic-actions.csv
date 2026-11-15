@@ -1,0 +1,3 @@
+Action ID,Action Description,Risk Type,Execution,Date Created,Date Executed,Custom note
+DEMO-001,"Resize WEB-01 vCPU from 16 to 6",Efficiency,Ready,2026-11-01,,"Synthetic fixture, preserve this"
+DEMO-002,"Move BATCH-02 to recovery host",Performance,Execution Failed,2026-11-02,2026-11-03,Investigate placement

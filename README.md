@@ -1,115 +1,123 @@
-<h1 align="center">Capacity Planning for Claude Code</h1>
+# Capacity Planning for Claude Code
 
-<p align="center">
-  <strong>The open-source capacity planning desk that is just a database and Claude Code.</strong>
-</p>
+Know which server group is over its reserve limit, which workload needs fresh measurements and which change still lacks evidence. Keep capacity, demand windows, sizing proposals and follow-ups in a database you own.
 
-<p align="center">
-  Created by <a href="https://www.enterprisedna.co"><strong>Enterprise DNA</strong></a>. Free and open source. Works with Claude Code, Codex, OpenCode or Cursor.
-</p>
+## Three ways to own it
 
-<!-- three-doors -->
-<table align="center">
-  <tr>
-    <td align="center"><strong>Do it yourself</strong><br/>Clone it, run it, own it. Free, MIT.<br/><a href="#quick-start">Quick start</a></td>
-    <td align="center"><strong>We customise it</strong><br/>Your fields, your rules, your IBM Turbonomic data brought across.<br/><a href="https://enterprisedna.co/omni/book/?utm_source=github&utm_medium=readme&utm_campaign=ibm-turbonomic">Book a call</a></td>
-    <td align="center"><strong>We run it for you</strong><br/>Installed, connected and operated inside Omni. Setup fee, then a retainer.<br/><a href="https://enterprisedna.co/omni/instead-of/ibm-turbonomic?utm_source=github&utm_medium=readme&utm_campaign=ibm-turbonomic">How it works</a></td>
-  </tr>
-</table>
+- **Do it yourself:** free, MIT licensed. Use Claude Code, Codex, OpenCode or Cursor. Hosting and your agent subscription are separate.
+- **We customise it:** Enterprise DNA brings your IBM Turbonomic history across, adds your capacity policies and builds the connections, web front end or different stack you need. One setup fee, then a retainer.
+- **We run it for you:** Omni by Enterprise DNA installs it, connects your systems, manages access and backups, and prepares the weekly capacity review. One setup fee, then a retainer.
 
-<p align="center">
-  <a href="#what-is-this">What is this</a> &bull;
-  <a href="#why-no-front-end">Why no front end</a> &bull;
-  <a href="#quick-start">Quick start</a> &bull;
-  <a href="#the-commands">Commands</a> &bull;
-  <a href="#instead-of-ibm-turbonomic">Instead of IBM Turbonomic</a> &bull;
-  <a href="#want-it-installed-and-run-for-you">Installed for you</a> &bull;
-  <a href="#license">License</a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Node-20+-339933?style=flat-square" alt="Node 20+" />
-  <img src="https://img.shields.io/badge/PostgreSQL-any-336791?style=flat-square" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/PGlite-embedded-3ecf8e?style=flat-square" alt="PGlite" />
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License" />
-</p>
-
----
-
-## What is this
-
-Capacity Planning for Claude Code does the job you pay IBM Turbonomic for, as a Postgres database and a set of agent commands. There is no web front end. You open the folder in [Claude Code](https://claude.com/claude-code) (or Codex, OpenCode, Cursor: see `AGENTS.md`) and ask for what you want in plain language. It runs the right query, and it can answer questions the IBM Turbonomic dashboard cannot.
-
-<!-- TODO(author): the annual bill. One sentence: what a 10 to 50 person business typically pays IBM Turbonomic per year, all in, with a source. -->
-
-Want the same thing with a web front end, or built on a different stack? That is a customisation, and it is exactly what Enterprise DNA does: [book a call](https://enterprisedna.co/omni/book/?utm_source=github&utm_medium=readme&utm_campaign=ibm-turbonomic).
-
-<!-- TODO(author): two or three sentences on what this specific product covers and who it is for. -->
-
-## Why no front end
-
-- The front end was only ever there because the database was hard to talk to. That is no longer true.
-- Your data sits in plain Postgres tables you own. Any tool can read them. No export, no lock-in.
-- No seats, no tiers, no add-ons. Read [docs/why-no-front-end.md](docs/why-no-front-end.md) for the honest trade-offs too.
+[Book a 30-minute call with Sam](https://enterprisedna.co/omni/book/?offer=replace-software&utm_source=github&utm_medium=readme&utm_campaign=ibm-turbonomic).
 
 ## Quick start
 
-Sixty seconds, no database install (an embedded Postgres runs inside Node):
+Node 20 or newer. No cloud account required.
 
-```bash
-git clone https://github.com/Enterprise-DNA-OS/capacity-planning-for-claude-code.git
-cd capacity-planning-for-claude-code
+```sh
 npm install
+npm test
 npm run demo
+npm run capacity -- capacity-review
+npm run capacity -- sizing-review --json
+npm run view
+npm run docs
 ```
 
-Then open the folder in Claude Code and type a slash command. <!-- TODO(author): name the first command to try. -->
+Open this folder in your agent and ask for /weekly-review. The synthetic demo includes a cluster above reserve limits, an overdue proposal, an old measurement and a workload with no measurement. Reseeding preserves edits. Never seed a real database. Use a new DATA_DIR for an empty local database; set DATABASE_URL for shared PostgreSQL instead of local PGlite.
 
-### Use it with your own Postgres or Supabase
+## What you own
 
-Copy `.env.example` to `.env`, set `DATABASE_URL`, then `npm run migrate`. Same commands, shared data, no per-seat fee.
+A periodic capacity review desk, not the complete Turbonomic engine. It records clusters, workloads, measurement evidence, proposals, decisions, outcomes, imported action history and assigned follow-ups. It does not discover machines, collect telemetry, stitch topology, execute changes, schedule containers, simulate placement or price cloud commitments. Keep the monitoring and control systems needed for those jobs until your custom replacement is connected and tested.
 
-## The commands
+The weekly rituals are capacity review, sizing review, stale data, change review and evidence checks. Three branded read-only views and two document types turn the records into a weekly brief and a change record. brand.json sets the name, colours and logo.
 
-<!-- TODO(author): a table of the slash commands in .claude/commands and what each one does. -->
+## The calculation
 
-| Command | What it does |
+Cluster headroom equals floor(allocatable capacity × (100 minus reserve percent) / 100) minus active allocations. CPU capacity and workload CPU use the same allocatable-unit basis. Do not compare physical core counts with overcommitted vCPU allocations. Memory uses GiB. Negative headroom means allocated resources exceed your reserve policy, not that a server is necessarily overloaded.
+
+A sizing candidate uses ceil(p95 absolute demand / 0.70), minimum one CPU unit or GiB. The latest window must end within seven days and cover at least fourteen days. The operator verifies measurement coverage. A p95 value alone does not cover every peak, resilience constraint, latency target or vendor minimum. No suggestion guarantees performance. Critical workloads are labelled for review. Proposal creation rejects values below the measured floor; business constraints can justify a larger size.
+
+A proposal freezes the old allocation, measurement and rollback plan. Another reviewer label records a decision, evidence and an impact review. Newer or stale measurement evidence blocks approval. A verified outcome updates the recorded allocation only after the operator supplies external change and validation evidence. Failed or cancelled outcomes leave it unchanged. The software never touches a running server.
+
+## Commands
+
+| Command | Job |
 |---|---|
-| `/...` | ... |
+| /help | Read supported commands and flags. |
+| /clusters | Read cluster capacity, reserve and inventory evidence. |
+| /workloads | Read workload allocations and owners. |
+| /capacity-review | Compare allocated capacity with headroom after reserve. |
+| /sizing-review | Review measured demand against recorded allocations. |
+| /stale-data | Find missing, stale or short measurement windows. |
+| /change-review | Review proposed changes, decisions and outcomes. |
+| /compliance | Check decisions, validation records and evidence freshness. |
+| /actions-due | Review overdue and next-week follow-ups. |
+| /source-actions | Read original imported Turbonomic actions. |
+| /activity | Read recorded mutations and actor labels. |
+| /workload | Read one workload, its observations and change history. |
+| /add-cluster | Record a cluster and its allocatable capacity. |
+| /review-cluster | Update measured capacity and its evidence. |
+| /add-workload | Record a workload and its current allocation. |
+| /record-observation | Record a measured p95 demand window. |
+| /propose-change | Propose a new allocation with evidence and rollback instructions. |
+| /decide-change | Record approval or rejection with an impact review. |
+| /record-outcome | Record an externally performed change and verification result. |
+| /log-action | Assign a follow-up and due date. |
+| /close-action | Record a follow-up resolution. |
+| /import | Import an IBM Turbonomic action export atomically. |
+| /export | Export all records and original imports to a private snapshot. |
+| /weekly-review | Draft Monday review from capacity, stale data, changes and follow-ups. |
+| /draft-change | Draft a branded change record for review. |
+| /customise | Add a field or rule with a tested migration. |
+| /new-view | Add a branded read-only view. |
 
-## Instead of IBM Turbonomic
+25 executable commands, 27 slash-command recipes. Each executable supports --json. Exact codes take precedence, then partial ids and case-insensitive names. An ambiguous match lists candidates and exits 1. Run npm run capacity -- help for the supported flags. Flags use --name=value.
 
-<!-- TODO(author): how to bring data across from IBM Turbonomic; link docs/replace-ibm-turbonomic.md -->
+## Ten questions your own records answer
 
-## Architecture
+1. Which cluster has negative CPU headroom after reserve?
+2. Which cluster has negative memory headroom after reserve?
+3. Which workloads have no current measurements?
+4. Which measurement windows are too short for review?
+5. Which allocations exceed the measured-demand policy floor?
+6. Which critical workloads appear in the sizing review?
+7. Which proposed changes are overdue?
+8. Which approved changes still lack a verification outcome?
+9. Which failed vendor actions need an owner to investigate?
+10. Who changed an allocation record and what evidence did they supply?
 
-```
-capacity-planning-for-claude-code/
-  CLAUDE.md                 how the operator wants this run (routing table + house rules)
-  AGENTS.md                 the same, for Codex / OpenCode / Cursor / Gemini CLI
-  .claude/commands/         the slash commands
-  scripts/                  the CLI the commands drive
-  scripts/lib/db.mjs        one adapter: DATABASE_URL (pg) or embedded PGlite
-  supabase/migrations/      plain SQL schema
-  supabase/seed.sql         demo data
-  docs/                     the thesis and the migration guide
-```
+These queries work today. They are not a claim that IBM cannot answer the same questions. Your own joins, policies and evidence are editable.
 
-## Built for coding agents
+## Your first hour: ten things to ask for
 
-The database, CLI and command recipes work with Claude Code, Codex, OpenCode or Cursor. Ask your coding agent for a new command and have it implement and test the change against the same records.
+1. Put our business name, logo and colours in brand.json.
+2. Show capacity after our reserve policy.
+3. Explain the cluster with negative headroom.
+4. Find workloads with missing or old measurements.
+5. Compare current allocations with the sizing candidates.
+6. Draft Monday's review and show the evidence gaps.
+7. Produce the proposed change record.
+8. Test our Turbonomic export mapping and reconcile the source rows.
+9. Add our maintenance-window field with a tested migration.
+10. Export a private snapshot before changing a rule.
 
-## Contributing
+## Bring your history
 
-Issues and pull requests are welcome. Keep the shape: plain SQL, a small CLI, a slash command per recurring job, no front end.
+[Replace guide](docs/replace-ibm-turbonomic.md): download an action CSV, inspect or map its headers, test it, then import with one command. The original file and all extra columns survive. Identical files do nothing; conflicting IDs and invalid rows roll back the entire import. Imported actions retain vendor wording and never become local approvals automatically. Inventory and measured-demand windows are separate inputs.
 
-## Want it installed and run for you?
+[Compliance](docs/compliance.md) distinguishes NIST change-evidence checks from local freshness rules. [Why no front end](docs/why-no-front-end.md) covers the live-screen and mobile limits. [Research](docs/research.md) records pricing sources, candidate scores and the absence of a verified local buyer invoice.
 
-Enterprise DNA installs Capacity Planning for Claude Code for your business, migrates your IBM Turbonomic data, connects it to the rest of your tools, and runs it for you as part of **Omni**, our managed Command Center. One setup fee, then a monthly retainer.
+## Operating boundaries
 
-- Book a call: [enterprisedna.co/omni/book](https://enterprisedna.co/omni/book/?offer=replace-software&utm_source=github&utm_medium=readme&utm_campaign=ibm-turbonomic)
-- Read more: [enterprisedna.co/omni/instead-of/ibm-turbonomic](https://enterprisedna.co/omni/instead-of/ibm-turbonomic?utm_source=github&utm_medium=readme&utm_campaign=ibm-turbonomic)
+Use a trusted database owner. Domain tables enable row-level security and revoke PUBLIC access. These settings do not create a multi-user identity system. Actor names are labels, and database owners can bypass triggers. Observations, proposals, decisions, outcomes, imports, source actions and activity are append-only under ordinary access. All CLI mutations serialize on a common database lock. PGlite permits one process at a time; shared PostgreSQL supports multiple connections.
 
-## License
+Export writes ten record groups including original imports and activity to a new private JSON file. It never overwrites an existing file. It is a portable snapshot, not a tested disaster-recovery restore command. Keep database backups and test restoration separately. Drafts and generated HTML contain private records and stay ignored by Git.
 
-MIT. Copyright (c) 2026 Enterprise DNA.
+## Validation
+
+npm test uses a fresh temporary database and output directory, exercises all 25 commands, and checks arithmetic, rejected states, evidence freshness, atomic imports, source preservation, HTML escaping and ambiguous names. The manual workflow covers Ubuntu and Windows on Node 20 and 22, plus PostgreSQL 17. See [observed results](docs/validation.md). A configured workflow is not a claim that every platform has run.
+
+## Licence
+
+MIT. Copyright 2026 Enterprise DNA. IBM Turbonomic belongs to its owner. No vendor code or assets are included.
